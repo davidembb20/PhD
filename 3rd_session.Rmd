@@ -1,0 +1,32 @@
+---
+title: "Replication of Hammer et al. (2023)"
+author: "David Baptista"
+output: html_document
+bibliography: references.bib
+---
+
+[Efficient quantile tracking using an oracle](https://doi.org/10.1007/s10489-022-03489-1)
+<https://doi.org/10.1007/s10489-022-03489-1>
+
+The purpose of this document is to replicate both synthetic experiments from @rue2022oracle.
+
+```{r Packages}
+library (dplyr)
+```
+
+```{r Simulate Data}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+
+
+
+
