@@ -208,33 +208,33 @@ lines(
 ```
 
 # Figure 3
-```{r}
+```{r Chi-Squared Data Stream}
 # Chi-squared distributed data stream (to be used only for Fig. 3 => perhaps I'll need to redefine this... and tau_n function, eventually... with (N %% t) instead of t?) 
-v <- 6
-for (t in iter) {
-    df_t <- v + b * sin(2 * pi * t / tau_n(t))
-    chisq_stream[t + 1] <- rchisq(1, df = df_t)
-}
+#v <- 6
+#for (t in iter) {
+#    df_t <- v + b * sin(2 * pi * t / tau_n(t))
+#    chisq_stream[t + 1] <- rchisq(1, df = df_t)
+#}
 ```
 
 ```{r MSE}
 # Definir melhor isto! The arguments
-MSE <- function (observations, estimates) {
-    return (mean((estimates - observations)^2))
-}
+#MSE <- function (observations, estimates) {
+#    return (mean((estimates - observations)^2))
+#}
 ```
 
 ```{r}
 # Theoretical time-varying quantile, Figure 2
-q_true_fig2 <- mean_t + sigma * qnorm(q_fig2)
+#q_true_fig2 <- mean_t + sigma * qnorm(q_fig2)
 
-MSE <- function(true_quantiles, estimates) {
-  mean((estimates - true_quantiles)^2)
-}
+#MSE <- function(true_quantiles, estimates) {
+#  mean((estimates - true_quantiles)^2)
+#}
 
-mse_oracle <- MSE(q_true_fig2, oracle_quantiles)
+#mse_oracle <- MSE(q_true_fig2, oracle_quantiles)
 
-mse_oracle
+#mse_oracle
 ```
 
 ## \textit{HIL} Approach
@@ -242,10 +242,10 @@ mse_oracle
 # HIL (High, Intermediate, Low) Approach
 # Wrong value for M
 
-U <- runif (, min = 0, max = 1000) # how many should I generate?
-M <- 10^3 + U # number of iterations before an update of the update size tuning parameter, lambda
-gamma_HIL <- 1 - (0.01)^(1/M)
-a <- 1.5
+#U <- runif (, min = 0, max = 1000) # how many should I generate?
+#M <- 10^3 + U # number of iterations before an update of the update size tuning parameter, lambda
+#gamma_HIL <- 1 - (0.01)^(1/M)
+#a <- 1.5
 
     # L should be 3 for the HIL approach
  ```
@@ -253,3 +253,4 @@ a <- 1.5
 
 
 
+<!--  -->
