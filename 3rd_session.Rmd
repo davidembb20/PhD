@@ -1,7 +1,9 @@
 ---
 title: "Replication of Hammer et al. (2023)"
 author: "David Baptista"
-output: html_document
+output:
+  github_document:
+    html_preview: false
 bibliography: references.bib
 ---
 
