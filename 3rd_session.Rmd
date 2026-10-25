@@ -248,9 +248,4 @@ lines(
 #a <- 1.5
 
     # L should be 3 for the HIL approach
- ```
-
-
-
-
-<!--  -->
+```
