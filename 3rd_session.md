@@ -2,27 +2,26 @@ Replication of Hammer et al. (2023)
 ================
 David Baptista
 
-[Efficient quantile tracking using an
-oracle](https://doi.org/10.1007/s10489-022-03489-1)
+<!--
+Other ways of making a link clickable:
+[Efficient quantile tracking using an oracle](https://doi.org/10.1007/s10489-022-03489-1)
 <https://doi.org/10.1007/s10489-022-03489-1>
+&#10;message = FALSE hides only the output.
+echo    = FALSE hides only the code but shows the output.
+include = FALSE runs the chunk and hides both code and output.
+&#10;**This is bold text**
+*This is italic text*
+***This is bold and italic text***
+-->
+
+<!-- comment -->
 
 The purpose of this document is to replicate both synthetic experiments
-from Hammer et al. (2023).
+from Hammer et al. ([2023](#ref-rue2023oracle)).
 
 ``` r
 library (dplyr)
 ```
-
-    ## 
-    ## Attaching package: 'dplyr'
-
-    ## The following objects are masked from 'package:stats':
-    ## 
-    ##     filter, lag
-
-    ## The following objects are masked from 'package:base':
-    ## 
-    ##     intersect, setdiff, setequal, union
 
 ``` r
 rm (list = ls())
@@ -32,12 +31,13 @@ set.seed (1234)
 # Support Functions
 
 Deterministic Multiplicative Incremental Quantile Estimator (DUMIQE),
-based on Yazidi and Hammer (2019). This article provides a more detailed
-explanation of the initialization step of the DUMIQE algorithm. In the
-experiments presented in Hammer et al. (2023), there is no need to
-account for negative quantiles or the possibility of the algorithm
-producing quantile estimates equal to zero. Therefore, this document
-presents a simplified version of the DUMIQE algorithm.
+based on Yazidi and Hammer ([2019](#ref-DUMIQE_algorithm)). This article
+provides a more detailed explanation of the initialization step of the
+DUMIQE algorithm. In the experiments presented in Hammer et al.
+([2023](#ref-rue2023oracle)), there is no need to account for negative
+quantiles or the possibility of the algorithm producing quantile
+estimates equal to zero. Therefore, this document presents a simplified
+version of the DUMIQE algorithm.
 
 ``` r
 D1 <- function (q_prob, q_hat) {
@@ -110,7 +110,7 @@ normal_stream <- rnorm(
 q_fig2 <- 0.7
 ```
 
-##  Approach
+## *Oracle* Approach
 
 ``` r
 possible_lambdas <- exp(seq (from = -7, to = 0, by = 0.05))
@@ -257,58 +257,17 @@ lines(
 
 ![](3rd_session_files/figure-gfm/Quantile%20Tracking%20Plot-1.png)<!-- -->
 
-# Figure 3
+<!-- # Figure 3 -->
 
-``` r
-# Chi-squared distributed data stream (to be used only for Fig. 3 => perhaps I'll need to redefine this... and tau_n function, eventually... with (N %% t) instead of t?) 
-#v <- 6
-#for (t in iter) {
-#    df_t <- v + b * sin(2 * pi * t / tau_n(t))
-#    chisq_stream[t + 1] <- rchisq(1, df = df_t)
-#}
-```
-
-``` r
-# Definir melhor isto! The arguments
-#MSE <- function (observations, estimates) {
-#    return (mean((estimates - observations)^2))
-#}
-```
-
-``` r
-# Theoretical time-varying quantile, Figure 2
-#q_true_fig2 <- mean_t + sigma * qnorm(q_fig2)
-
-#MSE <- function(true_quantiles, estimates) {
-#  mean((estimates - true_quantiles)^2)
-#}
-
-#mse_oracle <- MSE(q_true_fig2, oracle_quantiles)
-
-#mse_oracle
-```
-
-##  Approach
-
-``` r
-# HIL (High, Intermediate, Low) Approach
-# Wrong value for M
-
-#U <- runif (, min = 0, max = 1000) # how many should I generate?
-#M <- 10^3 + U # number of iterations before an update of the update size tuning parameter, lambda
-#gamma_HIL <- 1 - (0.01)^(1/M)
-#a <- 1.5
-
-    # L should be 3 for the HIL approach
-```
+<!-- ## _HIL_ Approach -->
 
 <div id="refs" class="references csl-bib-body hanging-indent">
 
 <div id="ref-rue2023oracle" class="csl-entry">
 
 Hammer, Hugo L., Anis Yazidi, Michael A. Riegler, and Håvard Rue. 2023.
-“Efficient Quantile Tracking Using an Oracle.” *Applied Intelligence*,
-ahead of print. <https://doi.org/10.1007/s10489-022-03489-1>.
+“Efficient Quantile Tracking Using an Oracle.” *Applied Intelligence*
+53: 289–300. <https://doi.org/10.1007/s10489-022-03489-1>.
 
 </div>
 
@@ -316,7 +275,7 @@ ahead of print. <https://doi.org/10.1007/s10489-022-03489-1>.
 
 Yazidi, Anis, and Hugo Lewi Hammer. 2019. “Multiplicative Update Methods
 for Incremental Quantile Estimation.” *IEEE Transactions on Cybernetics*
-49 (3): 746–56.
+49 (3): 746–56. <https://doi.org/10.1109/TCYB.2017.2779140>.
 
 </div>
 

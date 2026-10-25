@@ -5,18 +5,28 @@ output:
   github_document:
     html_preview: false
 bibliography: references.bib
+link-citations: true
 ---
-
+<!--
+Other ways of making a link clickable:
 [Efficient quantile tracking using an oracle](https://doi.org/10.1007/s10489-022-03489-1)
 <https://doi.org/10.1007/s10489-022-03489-1>
 
-The purpose of this document is to replicate both synthetic experiments from @rue2023oracle.
+message = FALSE hides only the output.
+echo    = FALSE hides only the code but shows the output.
+include = FALSE runs the chunk and hides both code and output.
 
-```{r Packages}
+**This is bold text**
+*This is italic text*
+***This is bold and italic text***
+-->
+<!-- comment -->
+The purpose of this document is to replicate both synthetic experiments from @rue2023oracle.
+```{r Packages, message = FALSE, warning = FALSE}
 library (dplyr)
 ```
 
-```{r Refresh and Seed}
+```{r Refresh and Seed, message = FALSE}
 rm (list = ls())
 set.seed (1234)
 ```
@@ -89,7 +99,7 @@ normal_stream <- rnorm(
 q_fig2 <- 0.7
 ```
 
-## \textit{Oracle} Approach
+## _Oracle_ Approach
 ```{r Tuning Parameters}
 possible_lambdas <- exp(seq (from = -7, to = 0, by = 0.05))
 L <- length(possible_lambdas) # number of estimates per iteration 
@@ -209,8 +219,8 @@ lines(
 )
 ```
 
-# Figure 3
-```{r Chi-Squared Data Stream}
+<!-- # Figure 3 -->
+```{r Chi-Squared Data Stream, include = FALSE}
 # Chi-squared distributed data stream (to be used only for Fig. 3 => perhaps I'll need to redefine this... and tau_n function, eventually... with (N %% t) instead of t?) 
 #v <- 6
 #for (t in iter) {
@@ -219,14 +229,14 @@ lines(
 #}
 ```
 
-```{r MSE}
+```{r MSE, include = FALSE}
 # Definir melhor isto! The arguments
 #MSE <- function (observations, estimates) {
 #    return (mean((estimates - observations)^2))
 #}
 ```
 
-```{r}
+```{r, include = FALSE}
 # Theoretical time-varying quantile, Figure 2
 #q_true_fig2 <- mean_t + sigma * qnorm(q_fig2)
 
@@ -239,8 +249,8 @@ lines(
 #mse_oracle
 ```
 
-## \textit{HIL} Approach
-```{r HIL Approach}
+<!-- ## _HIL_ Approach -->
+```{r HIL Approach, include = FALSE}
 # HIL (High, Intermediate, Low) Approach
 # Wrong value for M
 
