@@ -215,6 +215,9 @@ Optimal (oracle) value of $\lambda$ for the data stream dynamics before and afte
 -->
 
 ``` r
+# ALERT: They're not computed this way!
+theoretical_lambdas <- c(rep(mean(oracle_fig2$lambdas[1:T]), times = T), rep(mean(oracle_fig2$lambdas[(T+1):(2*T)]), times = T))
+
 plot(
     x = 0:(N-1),
     y = oracle_fig2$lambdas,
@@ -223,9 +226,6 @@ plot(
     xlab = "Iteration",
     ylab = expression(lambda)
 )
-
-# ALERT: They're not computed this way!
-theoretical_lambdas <- c(rep(mean(oracle_fig2$lambdas[1:T]), times = T), rep(mean(oracle_fig2$lambdas[(T+1):(2*T)]), times = T))
 
 lines(
     x = 0:(N-1),
