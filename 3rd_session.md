@@ -48,7 +48,7 @@ DUMIQE <- function (t, x_obs, q_hat_previous, lambda_vec, q_prob) {
         rep(Q_min, times = length(lambda_vec)) # L was still not defined
     } else {
         ifelse(
-            x_obs[t + 1] >= q_hat_previous,                           # Logical vector
+            x_obs[t] >= q_hat_previous,                           # Logical vector
             # RECALL: between 2 vectors, * and + performs element-wise multiplication and addition, respectively
             q_hat_previous + lambda_vec * D1(q_prob, q_hat_previous), # If TRUE
             q_hat_previous - lambda_vec * D2(q_prob, q_hat_previous)  # If FALSE
@@ -219,7 +219,7 @@ plot(
     x = 0:(N-1),
     y = oracle_fig2$lambdas,
     type = "l", # Line Plot
-    ylim = c(0,0.50),
+    ylim = c(0,0.15),
     xlab = "Iteration",
     ylab = expression(lambda)
 )
@@ -301,7 +301,8 @@ For higher values of $N$ (as in Hammer et al.
 only thing I need is to compute the squared difference between
 $Q_{\text{obs}}$ and $\hat{Q}$. There’s no need to store anything else!
 I´m having problems to run what´s below because of memory requirements.
-\## *Oracle* Approach
+
+## *Oracle* Approach
 
 <!-- ## _HIL_ Approach -->
 
