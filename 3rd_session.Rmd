@@ -215,7 +215,7 @@ How can the theoretically optimal value of $\lambda$, denoted by $\lambda_{\text
 <!-- 
 Optimal (oracle) value of $\lambda$ for the data stream dynamics before and after the concept change at iteration 10 000. We see that a larger $\lambda$ is needed to efficiently track rapid variations. We further see that the Oracle approach uses $\lambda$ close to the optimal theoretical $\lambda$. 
 -->
-```{r Recursive Lambda Updating Graph}
+```{r Recursive Lambda Updating Graph, eval = TRUE, include = TRUE}
 #| label: Recursive Lambda Updating Graph
 
 # ALERT: They're not computed this way!
