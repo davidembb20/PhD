@@ -200,6 +200,7 @@ In the upper left panel, we see that quantile loss quickly decreases and then st
  -->
 
 ```{r Estimated EQL by iteration graph}
+par(mfrow = c(1,1))
 #| label: Estimated EQL by iteration graph
 plot(
     x = 0:(N-1),

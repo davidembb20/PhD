@@ -197,6 +197,8 @@ In the upper left panel, we see that quantile loss quickly decreases and then st
  -->
 
 ``` r
+par(mfrow = c(1,1))
+#| label: Estimated EQL by iteration graph
 plot(
     x = 0:(N-1),
     y = oracle_fig2$EQL, # oracle_fig2$EQL, oracle_fig2$QL
