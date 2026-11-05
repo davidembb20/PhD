@@ -281,7 +281,9 @@ legend(
 Recall from Carvalho et al. ([2026](#ref-deCarvalho2026_handbook)) that
 the maximum of an i.i.d. sample from a Student’s *t*-distribution with
 $\nu > 0$ degrees of freedom belongs to the *max-domain of attraction*
-$\mathcal{D}_{1/\nu}$ (Fréchet – Type II). <!-- 
+$\mathcal{D}_{1/\nu}$ (Fréchet – Type II).
+
+<!-- 
 O Hill estimator só é usado com Type II distributions. In those cases, $\xi$ is also known as the tail index... 
 # f(n/k) is known for the student-t, right? just use its density function, right? De Haan & Ferreira Book
 # t_data <- rt(N, df = 1)
