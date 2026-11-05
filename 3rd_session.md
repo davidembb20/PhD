@@ -42,10 +42,10 @@ D2 <- function (q_prob, q_hat) {
 }
 
 # Incremental Algorithm (returns quantile estimates at iteration t for each lambda_vec value)
-DUMIQE <- function (t, x_obs, q_hat_previous, lambda_vec, q_prob) {
+DUMIQE <- function (t, x_obs, q_hat_previous, lambda_vec, q_prob, Q_0) {
     if (t == 0) { # Initialization step (Q_0)
-        Q_min <- 14 # chosen to be "outside" the data stream distribution
-        rep(Q_min, times = length(lambda_vec)) # L was still not defined
+        # Q_0 chosen to be "outside" the data stream distribution
+        rep(Q_0, times = length(lambda_vec)) # L was still not defined
     } else {
         ifelse(
             x_obs[t] >= q_hat_previous,                           # Logical vector
@@ -134,7 +134,7 @@ gamma_fig2 <- 1 - (0.01)^(1/1000) # 0.005
 ```
 
 ``` r
-oracle_fun <- function (N, data_stream, gamma, q_prob, lambdas_list = possible_lambdas) {
+oracle_fun <- function (N, data_stream, gamma, q_prob, lambdas_list = possible_lambdas, Q_initial) {
 
     q_hat   <- matrix(0, nrow = N, ncol = L)
     QL_hat  <- matrix(0, nrow = N, ncol = L)
@@ -153,7 +153,8 @@ oracle_fun <- function (N, data_stream, gamma, q_prob, lambdas_list = possible_l
             data_stream, 
             q_hat[max(t,1), ], # max is due to the initialization step
             lambdas_list,
-            q_prob
+            q_prob,
+            Q_0 = Q_initial
         )
 
         QL_hat[t + 1, ] <- QL(data_stream[t + 1], q_hat[t + 1, ], q_prob)
@@ -185,7 +186,7 @@ oracle_fun <- function (N, data_stream, gamma, q_prob, lambdas_list = possible_l
 ```
 
 ``` r
-oracle_fig2 <- oracle_fun(2*T, normal_stream_fig2, gamma_fig2, q_fig2)
+oracle_fig2 <- oracle_fun(2*T, normal_stream_fig2, gamma_fig2, q_fig2, Q_initial = 14)
 ```
 
 ## Diagnostics Plots
@@ -275,61 +276,121 @@ legend(
 
 ![](3rd_session_files/figure-gfm/Quantile%20Tracking%20Plot-1.png)<!-- -->
 
-# Figure 3
-
-``` r
-MSE <- function (Q_hat, Q_obs) {
-   return (mean((Q_hat - Q_obs)^2))
-}
-```
-
-Adjust the length of the list of $\gamma$’s
-
-``` r
-family <- c("normal", "chisq")
-gamma_list <- seq(from = 0, to = 0.025, by = 0.001) # 1 - (0.01)^(1/M)
-
-parallel_iter <- expand.grid(
-    family = family,
-    q_prob = q_fig3
-)
-# print(nrow(parallel_iter))
-
-N <- 10^5
-```
-
-For higher values of $N$ (as in Hammer et al.
-([2023](#ref-rue2023oracle))), I have to adjust oracle_fun, because the
-only thing I need is to compute the squared difference between
-$Q_{\text{obs}}$ and $\hat{Q}$. There’s no need to store anything else!
-I´m having problems to run what´s below because of memory requirements.
-
-## *Oracle* Approach
-
-<!-- ## _HIL_ Approach -->
-
-## Plots
-
 # Streaming POT
 
 Recall from Carvalho et al. ([2026](#ref-deCarvalho2026_handbook)) that
 the maximum of an i.i.d. sample from a Student’s *t*-distribution with
 $\nu > 0$ degrees of freedom belongs to the *max-domain of attraction*
-$\mathcal{D}_{1/\nu}$ (Fréchet – Type II).
-<!-- O Hill estimator só é usado com Type II distributions. In those cases, $\xi$ is also known as the tail index... -->
+$\mathcal{D}_{1/\nu}$ (Fréchet – Type II). <!-- 
+O Hill estimator só é usado com Type II distributions. In those cases, $\xi$ is also known as the tail index... 
+# f(n/k) is known for the student-t, right? just use its density function, right? De Haan & Ferreira Book
+# t_data <- rt(N, df = 1)
+# t_data <- rcauchy(N, location = 0, scale = 1)
+-->
 
 ``` r
-N <- 1000
-t_data <- rt(N, df = 1)
-# t_data <- rcauchy(N, location = 0, scale = 1)
+# 5 years of observations
+N    <- 5 * 365 
+time <- 0:(N-1) 
 
-# There's also the rgpd command from the 'evd' package to generate directly data from a GP model...
-# f(n/k) is known for the student-t, right? just use its density function, right?
+# (Hyper-) Parameters to be fitted...
+beta0  <- 1; beta1  <- 1; beta2 <- 1
+alpha0 <- 1; alpha1 <- 0.5
+
+# Underlying (distribution) parameters 
+mu_gp    <- beta0 + beta1 * cos((2 * pi * time / 365) - beta2)
+sigma_gp <- exp (alpha0 + alpha1 * time)
+shape_gp <- 1
+
+library(evd)
+gp_data <- rgpd(N, loc = mu_gp, scale = sigma_gp, shape = shape_gp)
+```
+
+``` r
+# It would be interesting to, at least, "find" some possible values for the threshold...
+```
+
+Several quantiles are tracked using the methodology proposed by Hammer
+et al. ([2023](#ref-rue2023oracle)), providing a set of candidate
+thresholds for subsequent analysis of the exceedances.
+
+``` r
+u_prob_track <- c(0.7) #, 
+#0.75, 
+#0.8, 
+#0.85,
+# 0.9) 
+```
+
+``` r
+possible_lambdas <- exp(seq (from = -7, to = 0, by = 0.05))
+L <- length(possible_lambdas) # number of estimates per iteration 
+gamma <- 1 - (0.01)^(1/1000) # close to 0.005
+```
+
+When the underlying process is non-stationary, what is the value of
+tracking a threshold without continuously assessing its suitability for
+accurately modelling the exceedances in an online setting?
+
+``` r
+oracle_thresholds <- vector("list", length(u_prob_track))
+
+for (i in seq_along(u_prob_track)) {
+  oracle_thresholds[[i]] <- oracle_fun(N, gp_data, gamma, u_prob_track[i], Q_initial = 20)$quantiles
+}
+```
+
+``` r
+y_u <- vector("list", length(u_prob_track))
+
+for (i in seq_along(u_prob_track)) {
+
+    y_u[[i]] <- vector("list", length(time)) # List of lists
+
+    for (j in time) {
+        
+        y_u[[i]][[j + 1]] <- ifelse(
+            gp_data > oracle_thresholds[[i]][[j + 1]],
+            gp_data - oracle_thresholds[[i]][[j + 1]],
+            0
+        ) 
+
+    }
+
+}
+```
+
+I could have used instead functions from the ‘ismev’ R package.
+
+``` r
+model_MLEs <- vector("list", length(u_prob_track))
+y_u_hat    <- vector("list", length(u_prob_track))
+
+for (i in seq_along(u_prob_track)) {
+
+    u_vec <- oracle_thresholds[[i]]
+    model_MLEs[[i]] <- vector("list", length(time))
+    y_u_hat[[i]]    <- vector("list", length(time))
+
+    for (j in time) { # time starts at j = 0;
+        
+        fit <- fpot(
+            gp_data[1:max(365,(j + 1))], # max: to start with a decent n_obs
+            threshold = u_vec[max(365,(j + 1))], # for stability purposes
+            model = "gpd", 
+            # "pp": non-homogeneous Point (Poisson) Process
+            # "gpd": non-homogeneous Poisson Process
+            cmax = FALSE,
+            std.err = FALSE
+        )
+        model_MLEs[[i]][[j + 1]] <- fit$estimate
+        y_u_hat[[i]][[j + 1]]    <- fitted(fit)
+    }
+}
 ```
 
 <!-- 
 It makes sense to me that the first thing to do is to fit a GP model and find a first level of a suitable threshold, I guess. Only then can I use stochastic approximation (online stochastic gradient descent algorithm) to continuously update $\xi$ and $\sigma_u$, right? I should have an initial estimate for them. Or should I use a rolling window Hill estimator (for $\xi$)?
-&#10;Instead of using Rue's method to keep track of the quantiles, one can apply the quantile(df = df, prob = ) function to every entry of the u_track vector to see what's the current sample quantile estimate...
 -->
 
 <!-- 
