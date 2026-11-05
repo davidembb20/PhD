@@ -62,8 +62,8 @@ DUMIQE <- function (t, x_obs, q_hat_previous, lambda_vec, q_prob) {
 QL <- function (x_obs_t, q_hat_t, q_prob) {
     ifelse(
         x_obs_t >= q_hat_t,                 # Logical vector
-        (1 - q_prob) * (x_obs_t - q_hat_t), # If TRUE
-        q_prob * (q_hat_t - x_obs_t)        # If FALSE
+        q_prob * (x_obs_t - q_hat_t), # If TRUE
+        (1 - q_prob) * (q_hat_t - x_obs_t)        # If FALSE
     )
 }
 ```
@@ -205,7 +205,7 @@ plot(
     type = "l", # Line Plot
     ylim = c(0.00,1),
     xlab = "Iteration",
-    ylab = "Expected Quantile Loss (EQL)"
+    ylab = expression("Estimated Expected Quantile Loss (" * hat(EQL) * ")")
 )
 ```
 
@@ -224,7 +224,7 @@ plot(
     x = 0:(N-1),
     y = oracle_fig2$lambdas,
     type = "l", # Line Plot
-    ylim = c(0,0.15),
+    ylim = c(0,0.10),
     xlab = "Iteration",
     ylab = expression(lambda)
 )

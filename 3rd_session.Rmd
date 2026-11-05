@@ -47,10 +47,10 @@ D2 <- function (q_prob, q_hat) {
 }
 
 # Incremental Algorithm (returns quantile estimates at iteration t for each lambda_vec value)
-DUMIQE <- function (t, x_obs, q_hat_previous, lambda_vec, q_prob) {
+DUMIQE <- function (t, x_obs, q_hat_previous, lambda_vec, q_prob, Q_0) {
     if (t == 0) { # Initialization step (Q_0)
-        Q_min <- 14 # chosen to be "outside" the data stream distribution
-        rep(Q_min, times = length(lambda_vec)) # L was still not defined
+        # Q_0 chosen to be "outside" the data stream distribution
+        rep(Q_0, times = length(lambda_vec)) # L was still not defined
     } else {
         ifelse(
             x_obs[t] >= q_hat_previous,                           # Logical vector
@@ -68,8 +68,8 @@ DUMIQE <- function (t, x_obs, q_hat_previous, lambda_vec, q_prob) {
 QL <- function (x_obs_t, q_hat_t, q_prob) {
     ifelse(
         x_obs_t >= q_hat_t,                 # Logical vector
-        (1 - q_prob) * (x_obs_t - q_hat_t), # If TRUE
-        q_prob * (q_hat_t - x_obs_t)        # If FALSE
+        q_prob * (x_obs_t - q_hat_t), # If TRUE
+        (1 - q_prob) * (q_hat_t - x_obs_t)        # If FALSE
     )
 }
 ```
@@ -138,7 +138,7 @@ gamma_fig2 <- 1 - (0.01)^(1/1000) # 0.005
 
 ```{r Oracle Algorithm}
 #| label: Oracle Algorithm
-oracle_fun <- function (N, data_stream, gamma, q_prob, lambdas_list = possible_lambdas) {
+oracle_fun <- function (N, data_stream, gamma, q_prob, lambdas_list = possible_lambdas, Q_initial) {
 
     q_hat   <- matrix(0, nrow = N, ncol = L)
     QL_hat  <- matrix(0, nrow = N, ncol = L)
@@ -157,7 +157,8 @@ oracle_fun <- function (N, data_stream, gamma, q_prob, lambdas_list = possible_l
             data_stream, 
             q_hat[max(t,1), ], # max is due to the initialization step
             lambdas_list,
-            q_prob
+            q_prob,
+            Q_0 = Q_initial
         )
 
         QL_hat[t + 1, ] <- QL(data_stream[t + 1], q_hat[t + 1, ], q_prob)
@@ -189,7 +190,7 @@ oracle_fun <- function (N, data_stream, gamma, q_prob, lambdas_list = possible_l
 ```
 
 ```{r Figure 2}
-oracle_fig2 <- oracle_fun(2*T, normal_stream_fig2, gamma_fig2, q_fig2)
+oracle_fig2 <- oracle_fun(2*T, normal_stream_fig2, gamma_fig2, q_fig2, Q_initial = 14)
 ```
 
 ## Diagnostics Plots
@@ -208,7 +209,7 @@ plot(
     type = "l", # Line Plot
     ylim = c(0.00,1),
     xlab = "Iteration",
-    ylab = "Expected Quantile Loss (EQL)"
+    ylab = expression("Estimated Expected Quantile Loss (" * hat(EQL) * ")")
 )
 ```
 
@@ -226,7 +227,7 @@ plot(
     x = 0:(N-1),
     y = oracle_fig2$lambdas,
     type = "l", # Line Plot
-    ylim = c(0,0.15),
+    ylim = c(0,0.10),
     xlab = "Iteration",
     ylab = expression(lambda)
 )
@@ -274,159 +275,140 @@ legend(
 )
 ```
 
-# Figure 3
-```{r MSE}
-#| label: Mean Squared Error (MSE)
-MSE <- function (Q_hat, Q_obs) {
-   return (mean((Q_hat - Q_obs)^2))
-}
-```
-
-Adjust the length of the list of $\gamma$'s
-```{r Auxiliar}
-#| label: Auxiliar Quantities
-family <- c("normal", "chisq")
-gamma_list <- seq(from = 0, to = 0.025, by = 0.001) # 1 - (0.01)^(1/M)
-
-parallel_iter <- expand.grid(
-    family = family,
-    q_prob = q_fig3
-)
-# print(nrow(parallel_iter))
-
-N <- 10^5
-```
-
-For higher values of $N$ (as in @rue2023oracle), I have to adjust oracle_fun, because the only thing I need is to compute the squared difference between $Q_{\text{obs}}$ and $\hat{Q}$. There's no need to store anything else! I´m having problems to run what´s below because of memory requirements.
-
-## _Oracle_ Approach
-```{r Oracle Fig3, eval = FALSE, include = FALSE}
-#| label: Running Oracle Fig3
-
-# Store one MSE per combination
-oracle_MSE <- matrix(0, nrow = length(parallel_iter), ncol = length(gamma_list))
-
-# In order to use parallel, I need to use the same seed as above...
-for (i in seq_len(nrow(parallel_iter))) {
-
-    data           <- generate_data(parallel_iter$family[i], N, parallel_iter$q_prob[i])
-    stream         <- data$stream
-    true_quantiles <- data$quantiles
-
-    for (j in seq_len(length(gamma_list))) {
-        Oracle_quantiles <- oracle_fun(N, stream, parallel_iter$gamma[i], parallel_iter$q_prob[i])$quantiles
-        results_MSE[i,j] <- MSE(Oracle_quantiles, true_quantiles)
-    }
-
-    message("Completed step ", i, "\n")
-}
-```
-
-<!-- ## _HIL_ Approach -->
-```{r HIL Approach, eval = FALSE, include = FALSE}
-# HIL (High, Intermediate, Low) Approach
-# Wrong value for M
-
-#U <- runif (, min = 0, max = 1000) # how many should I generate?
-#M <- 10^3 + U # number of iterations before an update of the update size tuning parameter, lambda
-#gamma_HIL <- 1 - (0.01)^(1/M)
-#a <- 1.5
-
-    # L should be 3 for the HIL approach
-```
-
-## Plots
-```{r Figure 3 Plots, eval = FALSE, include = FALSE}
-#| label: Figure 3 Plots
-
-par(mfrow = c(3,2))
-# Had to do this way, to properly adjust each plot ylim
-
-plot(
-    x = gamma_list,
-    y = results_MSE[1, ],
-    type = "l", # Line Plot
-    ylim = c(0.00,1),
-    main = expression(paste("Normal, ", q == 0.5)), 
-    xlab = expression(gamma),
-    ylab = "MSE"
-)
-
-plot(
-    x = gamma_list,
-    y = results_MSE[2, ],
-    type = "l", # Line Plot
-    ylim = c(0.00,1),
-    main = expression(paste("Chisq, ", q == 0.5)),
-    xlab = expression(gamma),
-    ylab = "MSE"
-)
-
-plot(
-    x = gamma_list,
-    y = results_MSE[3, ],
-    type = "l", # Line Plot
-    ylim = c(0.00,1), 
-    main = expression(paste("Normal, ", q == 0.7)),
-    xlab = expression(gamma),
-    ylab = "MSE"
-)
-
-plot(
-    x = gamma_list,
-    y = results_MSE[4, ],
-    type = "l", # Line Plot
-    ylim = c(0.00,1), 
-    main = expression(paste("Chisq, ", q == 0.7)),
-    xlab = expression(gamma),
-    ylab = "MSE"
-)
-
-plot(
-    x = gamma_list,
-    y = results_MSE[5, ],
-    type = "l", # Line Plot
-    ylim = c(0.00,1), 
-    main = expression(paste("Normal, ", q == 0.9)),
-    xlab = expression(gamma),
-    ylab = "MSE"
-)
-
-plot(
-    x = gamma_list,
-    y = results_MSE[6, ],
-    type = "l", # Line Plot
-    ylim = c(0.00,1), 
-    main = expression(paste("Chisq, ", q == 0.9)),
-    xlab = expression(gamma),
-    ylab = "MSE"
-)
-```
-
 # Streaming POT
 Recall from @deCarvalho2026_handbook that the maximum of an i.i.d. sample from a Student's *t*-distribution with $\nu > 0$ degrees of freedom belongs to the *max-domain of attraction* $\mathcal{D}_{1/\nu}$ (Fréchet -- Type II).
-<!-- O Hill estimator só é usado com Type II distributions. In those cases, $\xi$ is also known as the tail index... -->
-```{r student-t data}
-#| label: Data from a student-t distribution
-
-N <- 1000
-t_data <- rt(N, df = 1)
+<!-- 
+O Hill estimator só é usado com Type II distributions. In those cases, $\xi$ is also known as the tail index... 
+# f(n/k) is known for the student-t, right? just use its density function, right? De Haan & Ferreira Book
+# t_data <- rt(N, df = 1)
 # t_data <- rcauchy(N, location = 0, scale = 1)
+-->
+```{r GPD data}
+#| label: Data from a GPD distribution
 
-# There's also the rgpd command from the 'evd' package to generate directly data from a GP model...
-# f(n/k) is known for the student-t, right? just use its density function, right?
+# 5 years of observations
+N    <- 5 * 365 
+time <- 0:(N-1) 
+
+# (Hyper-) Parameters to be fitted...
+beta0  <- 1; beta1  <- 1; beta2 <- 1
+alpha0 <- 1; alpha1 <- 0.5
+
+# Underlying (distribution) parameters 
+mu_gp    <- beta0 + beta1 * cos((2 * pi * time / 365) - beta2)
+sigma_gp <- exp (alpha0 + alpha1 * time)
+shape_gp <- 1
+
+library(evd)
+gp_data <- rgpd(N, loc = mu_gp, scale = sigma_gp, shape = shape_gp)
+```
+
+```{r Density plot for Qmin, eval = FALSE, include = FALSE}
+t <- 1
+x <- seq(mu_gp[t], mu_gp[t] + 10 * sigma_gp[t], length.out = 500)
+
+plot(x,
+     dgpd(x, loc = mu_gp[t], scale = sigma_gp[t], shape = shape_gp),
+     type = "l",
+     lwd = 2,
+     col = "steelblue",
+     xlab = "x",
+     ylab = "Density",
+     main = "Theoretical GPD Density")
+```
+
+```{r (Initial) Threshold Selection}
+# It would be interesting to, at least, "find" some possible values for the threshold...
+```
+
+Several quantiles are tracked using the methodology proposed by @rue2023oracle, providing a set of candidate thresholds for subsequent analysis of the exceedances.
+```{r Thresholds to track}
+#| label: Thresholds to track
+u_prob_track <- c(0.7) #, 
+#0.75, 
+#0.8, 
+#0.85,
+# 0.9) 
+```
+
+```{r Oracle Tuning Parameters}
+#| label: Oracle Tuning Parameters
+possible_lambdas <- exp(seq (from = -7, to = 0, by = 0.05))
+L <- length(possible_lambdas) # number of estimates per iteration 
+gamma <- 1 - (0.01)^(1/1000) # close to 0.005
+```
+
+When the underlying process is non-stationary, what is the value of tracking a threshold without continuously assessing its suitability for accurately modelling the exceedances in an online setting?
+```{r Threshold Tracking (Oracle approach)}
+#| label: Threshold Tracking (Oracle approach)
+
+oracle_thresholds <- vector("list", length(u_prob_track))
+
+for (i in seq_along(u_prob_track)) {
+  oracle_thresholds[[i]] <- oracle_fun(N, gp_data, gamma, u_prob_track[i], Q_initial = 20)$quantiles
+}
+```
+
+```{r Real Threshold Exceedances}
+#| label: Real Threshold Exceedances
+
+y_u <- vector("list", length(u_prob_track))
+
+for (i in seq_along(u_prob_track)) {
+
+    y_u[[i]] <- vector("list", length(time)) # List of lists
+
+    for (j in time) {
+        
+        y_u[[i]][[j + 1]] <- ifelse(
+            gp_data > oracle_thresholds[[i]][[j + 1]],
+            gp_data - oracle_thresholds[[i]][[j + 1]],
+            0
+        ) 
+
+    }
+
+}
+```
+
+I could have used instead functions from the 'ismev' R package.
+```{r Fitting Threshold Exceedances, eval = FALSE}
+#| label: Fitting Threshold Exceedances
+
+model_MLEs <- vector("list", length(u_prob_track))
+y_u_hat    <- vector("list", length(u_prob_track))
+
+for (i in seq_along(u_prob_track)) {
+
+    u_vec <- oracle_thresholds[[i]]
+    model_MLEs[[i]] <- vector("list", length(time))
+    y_u_hat[[i]]    <- vector("list", length(time))
+
+    for (j in time) { # time starts at j = 0;
+        
+        fit <- fpot(
+            gp_data[1:max(365,(j + 1))], # max: to start with a decent n_obs
+            threshold = u_vec[max(365,(j + 1))], # for stability purposes
+            model = "gpd", 
+            # "pp": non-homogeneous Point (Poisson) Process
+            # "gpd": non-homogeneous Poisson Process
+            cmax = FALSE,
+            std.err = FALSE
+        )
+        model_MLEs[[i]][[j + 1]] <- fit$estimate
+        y_u_hat[[i]][[j + 1]]    <- fitted(fit)
+    }
+}
+```
+
+```{r Run Above}
+
 ```
 
 <!-- 
 It makes sense to me that the first thing to do is to fit a GP model and find a first level of a suitable threshold, I guess. Only then can I use stochastic approximation (online stochastic gradient descent algorithm) to continuously update $\xi$ and $\sigma_u$, right? I should have an initial estimate for them. Or should I use a rolling window Hill estimator (for $\xi$)?
-
-Instead of using Rue's method to keep track of the quantiles, one can apply the quantile(df = df, prob = ) function to every entry of the u_track vector to see what's the current sample quantile estimate...
 -->
-```{r, include = FALSE}
-# Se por um lado a tal aproximação pode funcionar usando um intermediate quantile as the baseline threshold, também há a questão do bias...
-# u_track <- c(0.5, 0.6, 0.7, 0.8, 0.9) 
-# quantiles_track <- rep(0, times = length(u_track))
-```
+
 
 <!-- 
 See what is the numerical algorithm behind the 'gpd.fit' function from the 'ismev' R package.

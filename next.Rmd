@@ -1,0 +1,128 @@
+# Figure 3
+```{r MSE, eval = FALSE, include = FALSE}
+#| label: Mean Squared Error (MSE)
+MSE <- function (Q_hat, Q_obs) {
+   return (mean((Q_hat - Q_obs)^2))
+}
+```
+
+Adjust the length of the list of $\gamma$'s
+```{r Auxiliar, eval = FALSE, include = FALSE}
+#| label: Auxiliar Quantities
+family <- c("normal", "chisq")
+gamma_list <- seq(from = 0, to = 0.025, by = 0.001) # 1 - (0.01)^(1/M)
+
+parallel_iter <- expand.grid(
+    family = family,
+    q_prob = q_fig3
+)
+# print(nrow(parallel_iter))
+
+N <- 10^5
+```
+
+For higher values of $N$ (as in @rue2023oracle), I have to adjust oracle_fun, because the only thing I need is to compute the squared difference between $Q_{\text{obs}}$ and $\hat{Q}$. There's no need to store anything else! I´m having problems to run what´s below because of memory requirements.
+
+## _Oracle_ Approach
+```{r Oracle Fig3, eval = FALSE, include = FALSE}
+#| label: Running Oracle Fig3
+
+# Store one MSE per combination
+oracle_MSE <- matrix(0, nrow = length(parallel_iter), ncol = length(gamma_list))
+
+# In order to use parallel, I need to use the same seed as above...
+for (i in seq_len(nrow(parallel_iter))) {
+
+    data           <- generate_data(parallel_iter$family[i], N, parallel_iter$q_prob[i])
+    stream         <- data$stream
+    true_quantiles <- data$quantiles
+
+    for (j in seq_len(length(gamma_list))) {
+        Oracle_quantiles <- oracle_fun(N, stream, parallel_iter$gamma[i], parallel_iter$q_prob[i])$quantiles
+        results_MSE[i,j] <- MSE(Oracle_quantiles, true_quantiles)
+    }
+
+    message("Completed step ", i, "\n")
+}
+```
+
+<!-- ## _HIL_ Approach -->
+```{r HIL Approach, eval = FALSE, include = FALSE}
+# HIL (High, Intermediate, Low) Approach
+# Wrong value for M
+
+#U <- runif (, min = 0, max = 1000) # how many should I generate?
+#M <- 10^3 + U # number of iterations before an update of the update size tuning parameter, lambda
+#gamma_HIL <- 1 - (0.01)^(1/M)
+#a <- 1.5
+
+    # L should be 3 for the HIL approach
+```
+
+## Plots
+```{r Figure 3 Plots, eval = FALSE, include = FALSE}
+#| label: Figure 3 Plots
+
+par(mfrow = c(3,2))
+# Had to do this way, to properly adjust each plot ylim
+
+plot(
+    x = gamma_list,
+    y = results_MSE[1, ],
+    type = "l", # Line Plot
+    ylim = c(0.00,1),
+    main = expression(paste("Normal, ", q == 0.5)), 
+    xlab = expression(gamma),
+    ylab = "MSE"
+)
+
+plot(
+    x = gamma_list,
+    y = results_MSE[2, ],
+    type = "l", # Line Plot
+    ylim = c(0.00,1),
+    main = expression(paste("Chisq, ", q == 0.5)),
+    xlab = expression(gamma),
+    ylab = "MSE"
+)
+
+plot(
+    x = gamma_list,
+    y = results_MSE[3, ],
+    type = "l", # Line Plot
+    ylim = c(0.00,1), 
+    main = expression(paste("Normal, ", q == 0.7)),
+    xlab = expression(gamma),
+    ylab = "MSE"
+)
+
+plot(
+    x = gamma_list,
+    y = results_MSE[4, ],
+    type = "l", # Line Plot
+    ylim = c(0.00,1), 
+    main = expression(paste("Chisq, ", q == 0.7)),
+    xlab = expression(gamma),
+    ylab = "MSE"
+)
+
+plot(
+    x = gamma_list,
+    y = results_MSE[5, ],
+    type = "l", # Line Plot
+    ylim = c(0.00,1), 
+    main = expression(paste("Normal, ", q == 0.9)),
+    xlab = expression(gamma),
+    ylab = "MSE"
+)
+
+plot(
+    x = gamma_list,
+    y = results_MSE[6, ],
+    type = "l", # Line Plot
+    ylim = c(0.00,1), 
+    main = expression(paste("Chisq, ", q == 0.9)),
+    xlab = expression(gamma),
+    ylab = "MSE"
+)
+```
